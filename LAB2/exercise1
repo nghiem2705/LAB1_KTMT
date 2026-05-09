@@ -1,0 +1,88 @@
+.data
+    str: .space 256
+    counts: .word 0:256
+    msg_input: .asciiz "Nhap chuoi: "
+    comma: .asciiz ", "
+    semicolon: .asciiz "; "
+
+.text
+.globl main
+main:
+    li $v0, 4
+    la $a0, msg_input
+    syscall
+
+    li $v0, 8
+    la $a0, str
+    li $a1, 256
+    syscall
+
+    la $t0, str
+count_loop:
+    lb $t1, 0($t0)
+    beq $t1, $zero, print_setup 
+    beq $t1, 10, skip_char      
+    
+    sll $t2, $t1, 2             
+    la $t3, counts
+    add $t3, $t3, $t2
+    lw $t4, 0($t3)
+    addi $t4, $t4, 1
+    sw $t4, 0($t3)
+    
+skip_char:
+    addi $t0, $t0, 1
+    j count_loop
+
+print_setup:
+find_min_loop:
+    li $t5, 9999            
+    li $t6, -1              
+    li $t0, 0               
+    la $t3, counts
+
+search_loop:
+    bge $t0, 256, check_found
+    lw $t4, 0($t3)
+    beq $t4, $zero, next_search 
+    blt $t4, 0, next_search     
+    
+    bge $t4, $t5, next_search   
+    move $t5, $t4               
+    move $t6, $t0               
+
+next_search:
+    addi $t0, $t0, 1
+    addi $t3, $t3, 4
+    j search_loop
+
+check_found:
+    beq $t6, -1, exit       
+
+    li $v0, 11
+    move $a0, $t6
+    syscall
+
+    li $v0, 4
+    la $a0, comma
+    syscall
+
+    li $v0, 1
+    move $a0, $t5
+    syscall
+
+    li $v0, 4
+    la $a0, semicolon
+    syscall
+
+    la $t3, counts
+    sll $t2, $t6, 2
+    add $t3, $t3, $t2
+    li $t4, -1
+    sw $t4, 0($t3)
+
+    j find_min_loop
+
+exit:
+    li $v0, 10
+    syscall

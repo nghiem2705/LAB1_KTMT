@@ -1,0 +1,94 @@
+.data
+    array: .space 40        
+    prompt: .asciiz "Please insert a element:\n"
+    msg_val: .asciiz "Second largest value is "
+    msg_idx: .asciiz ", found in index "
+    comma: .asciiz ", "
+
+.text
+.globl main
+main:
+    li $t0, 0               
+    la $t1, array
+    
+    li $s0, -2147483648     # max1
+    li $s1, -2147483648     # max2
+
+input_loop_ex4:
+    bge $t0, 10, find_maxes
+    li $v0, 4
+    la $a0, prompt
+    syscall
+    li $v0, 5
+    syscall
+    sw $v0, 0($t1)
+    
+    addi $t0, $t0, 1
+    addi $t1, $t1, 4
+    j input_loop_ex4
+
+find_maxes:
+    li $t0, 0
+    la $t1, array
+scan_loop:
+    bge $t0, 10, print_result
+    lw $t2, 0($t1)
+    
+    bgt $t2, $s0, new_max1
+    blt $t2, $s0, check_max2
+    j next_elem             
+    
+new_max1:
+    move $s1, $s0           
+    move $s0, $t2           
+    j next_elem
+    
+check_max2:
+    bgt $t2, $s1, new_max2
+    j next_elem
+new_max2:
+    move $s1, $t2           
+
+next_elem:
+    addi $t0, $t0, 1
+    addi $t1, $t1, 4
+    j scan_loop
+
+print_result:
+    li $v0, 4
+    la $a0, msg_val
+    syscall
+    li $v0, 1
+    move $a0, $s1
+    syscall
+    li $v0, 4
+    la $a0, msg_idx
+    syscall
+
+    li $t0, 0
+    la $t1, array
+    li $t3, 0               
+print_idx_loop:
+    bge $t0, 10, exit
+    lw $t2, 0($t1)
+    bne $t2, $s1, skip_print
+    
+    beq $t3, 0, no_comma
+    li $v0, 4
+    la $a0, comma
+    syscall
+no_comma:
+    li $v0, 1
+    move $a0, $t0
+    syscall
+    li $t3, 1               
+    
+skip_print:
+    addi $t0, $t0, 1
+    addi $t1, $t1, 4
+    j print_idx_loop
+
+exit:
+
+    li $v0, 10
+    syscall

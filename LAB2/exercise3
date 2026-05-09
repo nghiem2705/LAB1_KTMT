@@ -1,0 +1,78 @@
+.data
+    prompt_a: .asciiz "a="
+    prompt_b: .asciiz "b="
+    str_gcd: .asciiz "GCD="
+    str_lcm: .asciiz ", LCM="
+
+.text
+.globl main
+main:
+input_a:
+    li $v0, 4
+    la $a0, prompt_a
+    syscall
+    li $v0, 5
+    syscall
+    ble $v0, 0, input_a     
+    move $s0, $v0           
+
+input_b:
+    li $v0, 4
+    la $a0, prompt_b
+    syscall
+    li $v0, 5
+    syscall
+    ble $v0, 0, input_b     
+    move $s1, $v0           
+
+    # Tim GCD
+    move $a0, $s0
+    move $a1, $s1
+    jal find_gcd
+    move $s2, $v0           
+
+    # LCM = (a * b) / GCD
+    mul $t0, $s0, $s1
+    div $t0, $s2
+    mflo $s3                
+
+    li $v0, 4
+    la $a0, str_gcd
+    syscall
+    li $v0, 1
+    move $a0, $s2
+    syscall
+
+    li $v0, 4
+    la $a0, str_lcm
+    syscall
+    li $v0, 1
+    move $a0, $s3
+    syscall
+
+    li $v0, 10
+    syscall
+
+# Ham đe quy GCD(a, b)
+find_gcd:
+    addi $sp, $sp, -8
+    sw $ra, 4($sp)
+    sw $a0, 0($sp)
+
+    beq $a1, 0, gcd_base
+    
+    div $a0, $a1
+    mfhi $t0
+    
+    move $a0, $a1
+    move $a1, $t0
+    jal find_gcd
+    j gcd_end
+
+gcd_base:
+    move $v0, $a0
+gcd_end:
+    lw $a0, 0($sp)
+    lw $ra, 4($sp)
+    addi $sp, $sp, 8
+    jr $ra
